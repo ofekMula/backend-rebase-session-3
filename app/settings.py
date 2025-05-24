@@ -11,4 +11,3 @@ class Settings(BaseSettings):
     chunk_size: int = 1024 * 1024  # 1 MB
 
     storage_root: str = "storage"
-    index_file: str = "blob_index.json"

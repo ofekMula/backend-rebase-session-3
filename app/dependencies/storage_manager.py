@@ -16,7 +16,7 @@ class StorageManager:
 
         self.storage_path = Path(storage_path)
         os.makedirs(self.storage_path, exist_ok=True)
-        self.storage_metadata_path = self.storage_path.joinpath("blob_index.json")
+        self.storage_metadata_path = self.storage_path.joinpath("storage_meta.json")
 
         self.storage_metadata: StorageMeta = self._load_storage_metadata()
         self.directories: list[str] = self._load_blob_directories()
