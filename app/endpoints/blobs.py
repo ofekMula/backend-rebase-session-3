@@ -1,3 +1,4 @@
+import base64
 import mimetypes
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile
@@ -49,7 +50,7 @@ async def get_blob(blob_id: str):
 
         return BlobRetrievedResponse(
             message=f"Blob {blob_id} retrieved",
-            content=blob,  # Assuming blob is text; adjust as needed
+            content=base64.b64encode(blob).decode("utf-8"),
             headers=metadata.get("headers", {}),
         )
 
