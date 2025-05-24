@@ -49,7 +49,7 @@ class StorageManager:
         new_dir_name = str(uuid.uuid4())
         logger.info("Creating new blob directory: %s", new_dir_name)
         os.makedirs(self.storage_path / new_dir_name, exist_ok=True)
-        self.directories.append(new_dir_name)  # TODO: Validate name uniqueness
+        self.directories.append(new_dir_name)
         return new_dir_name
 
     def _search_dir_to_occupy(self) -> str:
@@ -68,7 +68,7 @@ class StorageManager:
 
     def save(self, blob_id: str, blob: BinaryIO, headers: dict[str, str] | None = None):
         logger.info("Saving blob: %s", blob_id)
-        dir_name = self._get_blob_dir(blob_id)  # In production, choose based on load/counter
+        dir_name = self._get_blob_dir(blob_id)
 
         blob_path = self._get_blob_path(blob_id)
         blob_md_path = self._get_metadata_path(blob_id)
