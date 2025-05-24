@@ -30,8 +30,8 @@ Ensure you have the following installed:
 
 1. **Clone the Repository**:
    ```sh
-   git clone https://github.com/ofekMula/backend-rebase-session-2.git
-   cd backend-rebase-session-2
+   git clone https://github.com/ofekMula/backend-rebase-session-3.git
+   cd backend-rebase-session-3
    ```
 
 2. **Install Dependencies**:
