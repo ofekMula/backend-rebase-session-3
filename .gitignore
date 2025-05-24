@@ -55,3 +55,6 @@ docs/_build/
 # 🛠️ IDE & Editor-Specific
 .idea/
 .ipynb_checkpoints/
+
+# service storage
+storage/
