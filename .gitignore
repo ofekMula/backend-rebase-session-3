@@ -1,0 +1,57 @@
+# 🐍 Python Bytecode and Caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 🏗️ Build & Distribution
+.Python
+build/
+dist/
+develop-eggs/
+.eggs/
+.installed.cfg
+*.egg-info/
+wheels/
+share/python-wheels/
+
+# 📦 Virtual Environments (uv)
+.venv/
+.uv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# 🚀 uv-specific
+__pypackages__/
+
+# 🧪 Unit Test & Coverage Reports
+.tox/
+.nox/
+.coverage
+.coverage.*
+.hypothesis/
+.pytest_cache/
+dmypy.json
+.pyre/
+.pytype/
+.mypy_cache/
+
+# 📝 Logs & Debugging
+*.log
+logs/
+db.sqlite3
+db.sqlite3-journal
+
+# 🛠️ Linting & Formatting
+ruff_cache/
+*.py,cover
+
+# 🏗️ Documentation
+docs/_build/
+.site/
+
+# 🛠️ IDE & Editor-Specific
+.idea/
+.ipynb_checkpoints/

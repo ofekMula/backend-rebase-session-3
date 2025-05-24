@@ -1,0 +1,53 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: (^tests/fixtures)
+      - id: end-of-file-fixer
+        exclude: (^tests/fixtures)
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: (^tests/fixtures)
+      - id: check-toml
+        exclude: (^tests/fixtures)
+      - id: fix-byte-order-marker
+        exclude: (^tests/fixtures)
+      - id: no-commit-to-branch
+        args:
+          [
+            "--pattern",
+            '^(?!((FORT-\d+|RQDEV-\d+|feature|bugfix|hotfix|refactor|test|build|wip|chore|release|merge|service)\/[a-zA-Z0-9\-]+)$).*',
+          ]
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.0.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args:
+          [
+            feat,
+            fix,
+            test,
+            style,
+            ci,
+            chore,
+            perf,
+            refactor,
+            build,
+            cruft,
+            docs,
+            depend,
+            merge,
+          ]
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.4.1
+    hooks:
+      - id: commitizen
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.11.2
+    hooks:
+      - id: ruff
+        args: ["--fix", "--config=pyproject.toml"]
