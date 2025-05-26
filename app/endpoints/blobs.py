@@ -1,11 +1,11 @@
-import base64
 import mimetypes
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile
+from fastapi.responses import StreamingResponse
 
 from app.dependencies.storage_manager import StorageManager
 from app.dependencies.validations import validate_blob_request
-from app.models.responses import BlobCreatedResponse, BlobDeletedResponse, BlobRetrievedResponse
+from app.models.responses import BlobCreatedResponse, BlobDeletedResponse
 from app.settings import Settings
 
 blobs_router = APIRouter()
@@ -45,16 +45,16 @@ async def create_blob(blob_id: str, request: Request, file: UploadFile):
 @blobs_router.get("/blobs/{blob_id}")
 async def get_blob(blob_id: str):
     try:
-        blob, metadata = storage_manager.load(blob_id)
+        blob_stream, metadata = storage_manager.stream_blob(blob_id)
         content_type = metadata.get("headers", {}).get("content-type")
         if not content_type:
             guess, _ = mimetypes.guess_type(blob_id)
-            metadata["headers"]["content-type"] = guess or "application/octet-stream"
+            metadata["headers"]["Content-type"] = guess or "application/octet-stream"
 
-        return BlobRetrievedResponse(
-            message=f"Blob {blob_id} retrieved",
-            content=base64.b64encode(blob).decode("utf-8"),
-            headers=metadata.get("headers", {}),
+        return StreamingResponse(
+            content=blob_stream,
+            media_type=metadata["headers"]["content-type"],
+            headers=metadata["headers"],
         )
 
     except FileNotFoundError:

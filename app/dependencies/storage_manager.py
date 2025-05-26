@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import uuid
+from collections.abc import Generator
 from pathlib import Path
 from typing import BinaryIO
 
@@ -87,7 +88,7 @@ class StorageManager:
         self.storage_metadata.index[blob_id] = dir_name
         self._save_index()
 
-    def load(self, blob_id: str) -> tuple[bytes, dict[str, str] | None]:
+    def stream_blob(self, blob_id: str) -> tuple[bytes, dict[str, str] | None]:
         logger.info("Loading blob: %s", blob_id)
 
         if not self._blob_exists(blob_id):
@@ -96,15 +97,17 @@ class StorageManager:
         blob_path = self._get_blob_path(blob_id)
         metadata_path = self._get_metadata_path(blob_id)
 
-        with open(blob_path, "rb") as f:
-            content = f.read()
+        def stream_blob() -> Generator[bytes, None, None]:
+            with open(blob_path, "rb") as f:
+                while chunk := f.read(self.chunk_size):
+                    yield chunk
 
         metadata = {}
         if metadata_path.exists():
             with open(metadata_path) as f:
                 metadata = json.load(f)
 
-        return content, metadata
+        return stream_blob(), metadata
 
     def delete(self, blob_id: str):
         logger.info("Deleting blob: %s", blob_id)
