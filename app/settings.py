@@ -8,6 +8,6 @@ class Settings(BaseSettings):
     max_header_count: int = 20
     max_id_length: int = 200
     max_blobs_in_folder: int = 10_000
-    chunk_size: int = 1024 * 1024  # 1 MB
+    chunk_size: int = 500 * 1024  # 500kB
 
     storage_root: str = "storage"
