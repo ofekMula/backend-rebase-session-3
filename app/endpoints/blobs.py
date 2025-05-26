@@ -30,13 +30,16 @@ async def create_blob(blob_id: str, request: Request, file: UploadFile):
         stored_headers,
         file,
     )
-    storage_manager.save(
-        blob_id=blob_id,
-        blob=file.file,
-        headers=stored_headers,
-    )
+    try:
+        storage_manager.save(
+            blob_id=blob_id,
+            blob=file.file,
+            headers=stored_headers,
+        )
 
-    return BlobCreatedResponse(message=f"Blob '{blob_id}' created successfully")
+        return BlobCreatedResponse(message=f"Blob '{blob_id}' created successfully")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving blob: {str(e)}")
 
 
 @blobs_router.get("/blobs/{blob_id}")
@@ -60,5 +63,9 @@ async def get_blob(blob_id: str):
 
 @blobs_router.delete("/blobs/{blob_id}")
 async def delete_blob(blob_id: str):
-    storage_manager.delete(blob_id)
-    return BlobDeletedResponse(message=f"Blob '{blob_id}' deleted successfully")
+    try:
+        storage_manager.delete(blob_id)
+        return BlobDeletedResponse(message=f"Blob '{blob_id}' deleted successfully")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting blob: {str(e)}")
