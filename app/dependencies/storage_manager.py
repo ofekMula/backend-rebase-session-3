@@ -1,7 +1,7 @@
+import hashlib
 import json
 import logging
 import os
-import uuid
 from collections.abc import Generator
 from pathlib import Path
 from typing import BinaryIO
@@ -20,7 +20,7 @@ class StorageManager:
         self.storage_metadata_path = self.storage_path.joinpath("storage_meta.json")
 
         self.storage_metadata: StorageMeta = self._load_storage_metadata()
-        self.directories: list[str] = self._load_blob_directories()
+
         self.max_blobs_in_dir = max_blobs_in_dir
         self.chunk_size = chunk_size
 
@@ -34,34 +34,20 @@ class StorageManager:
         with open(self.storage_metadata_path, "w") as f:
             json.dump(self.storage_metadata.model_dump(), f)
 
-    def _get_blob_dir(self, blob_id: str) -> str:
-        if dir_name := self.storage_metadata.index.get(blob_id):
-            return dir_name
-        return self._search_dir_to_occupy()
+    def _get_blob_dir_name(self, blob_id: str) -> str:
+        return hashlib.md5(blob_id.encode()).hexdigest()[:2]
 
     def _get_blob_path(self, blob_id: str) -> Path:
-        return self.storage_path.joinpath(self._get_blob_dir(blob_id), f"{blob_id}.blob")
+        return self.storage_path.joinpath(self._get_blob_dir_name(blob_id), f"{blob_id}.blob")
 
     def _get_metadata_path(self, blob_id: str) -> Path:
-        return self.storage_path.joinpath(self._get_blob_dir(blob_id), f"{blob_id}.meta.json")
+        return self.storage_path.joinpath(self._get_blob_dir_name(blob_id), f"{blob_id}.meta.json")
 
-    def _create_new_blob_dir(self) -> str:
+    def _create_new_blob_dir(self, new_dir_name: str) -> str:
         """Create a new blob directory based on the current number of directories."""
-        new_dir_name = str(uuid.uuid4())
         logger.info("Creating new blob directory: %s", new_dir_name)
         os.makedirs(self.storage_path / new_dir_name, exist_ok=True)
-        self.directories.append(new_dir_name)
         return new_dir_name
-
-    def _search_dir_to_occupy(self) -> str:
-        """Search for an existing directory to occupy based on the number of blobs."""
-
-        for dir_name in self.directories:
-            dir_path = self.storage_path / dir_name
-            if len(list(dir_path.glob("*.blob"))) < self.max_blobs_in_dir:
-                return dir_name
-
-        return self._create_new_blob_dir()
 
     def _load_blob_directories(self) -> list[str]:
         """Load existing blob directories from the storage path."""
@@ -69,13 +55,19 @@ class StorageManager:
 
     def save(self, blob_id: str, blob: BinaryIO, headers: dict[str, str] | None = None):
         logger.info("Saving blob: %s", blob_id)
-        dir_name = self._get_blob_dir(blob_id)
+
+        dir_name = self._get_blob_dir_name(blob_id)
+        dir_path = self.storage_path / dir_name
+        if not dir_path.exists():
+            self._create_new_blob_dir(dir_name)
 
         blob_path = self._get_blob_path(blob_id)
         blob_md_path = self._get_metadata_path(blob_id)
         blob_md_content = {
             "headers": headers or {},
         }
+        if blob_path.exists():
+            self.storage_metadata.used_bytes -= blob_path.stat().st_size
 
         with open(blob_path, "wb") as f:
             while chunk := blob.read(self.chunk_size):
@@ -85,7 +77,6 @@ class StorageManager:
         with open(blob_md_path, "w") as f:
             f.write(json.dumps(blob_md_content))
 
-        self.storage_metadata.index[blob_id] = dir_name
         self._save_index()
 
     def stream_blob(self, blob_id: str) -> tuple[bytes, dict[str, str] | None]:
@@ -111,21 +102,18 @@ class StorageManager:
 
     def delete(self, blob_id: str):
         logger.info("Deleting blob: %s", blob_id)
-        if blob_id not in self.storage_metadata.index:
-            return
 
         blob_path = self._get_blob_path(blob_id)
-        blob_size = blob_path.stat().st_size
-        headers_path = self._get_metadata_path(blob_id)
-
         if blob_path.exists():
-            blob_path.unlink()
-        if headers_path.exists():
-            headers_path.unlink()
+            blob_size = blob_path.stat().st_size
+            headers_path = self._get_metadata_path(blob_id)
 
-        del self.storage_metadata.index[blob_id]
-        self.storage_metadata.used_bytes -= blob_size
-        self._save_index()
+            blob_path.unlink()
+            if headers_path.exists():
+                headers_path.unlink()
+
+            self.storage_metadata.used_bytes -= blob_size
+            self._save_index()
 
     def _blob_exists(self, blob_id: str) -> bool:
-        return blob_id in self.storage_metadata.index
+        return self._get_blob_path(blob_id).exists()
