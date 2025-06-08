@@ -11,4 +11,4 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 
-app.include_router(blobs_router, prefix="/api/v1", tags=["blobs"])
+app.include_router(blobs_router, tags=["blobs"])
